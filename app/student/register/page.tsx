@@ -16,6 +16,8 @@ export default function AuthModal() {
 
   // Register fields
   const [name, setName] = useState("");
+  const [registrationNo, setRegistrationNo] = useState("");
+  const [hallCardNo, setHallCardNo] = useState("");
   const [phone, setPhone] = useState("");
   const [hallId, setHallId] = useState("");
   const [userType] = useState("student");
@@ -97,7 +99,7 @@ export default function AuthModal() {
 
   // ---- Register ----
   const handleRegister = async () => {
-    if (!name || !email || !password || !confirmPassword || !hallId) {
+    if (!name || !email || !password || !confirmPassword || !registrationNo || !hallCardNo || !hallId) {
       alert("❌ Please fill all required fields");
       return;
     }
@@ -118,7 +120,8 @@ export default function AuthModal() {
       // Check if email or registration number already exists
       const { data: existingUser } = await supabase
         .from("users")
-        .select("email")
+        .select("email, registration_no")
+        .or(`email.eq.${email},registration_no.eq.${registrationNo}`)
         .single();
 
       if (existingUser) {
@@ -149,6 +152,8 @@ export default function AuthModal() {
           hall_id: Number(hallId),
           user_type: userType,
           name: name.trim(),
+          registration_no: registrationNo.trim(),
+          hall_card_no: hallCardNo.trim(),
           email: email.toLowerCase(),
           password: password, // Note: Hash in production
           phone: phone.trim() || null,
@@ -172,13 +177,15 @@ export default function AuthModal() {
     setEmail("");
     setPassword("");
     setConfirmPassword("");
+    setRegistrationNo("");
+    setHallCardNo("");
     setPhone("");
     setHallId("");
     setLoginRegistrationNo("");
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 to-indigo-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-center">
@@ -201,6 +208,32 @@ export default function AuthModal() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Enter your full name"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    suppressHydrationWarning
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Registration Number *
+                  </label>
+                  <input
+                    value={registrationNo}
+                    onChange={(e) => setRegistrationNo(e.target.value)}
+                    placeholder="Enter registration number"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    suppressHydrationWarning
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Hall Card Number *
+                  </label>
+                  <input
+                    value={hallCardNo}
+                    onChange={(e) => setHallCardNo(e.target.value)}
+                    placeholder="Enter hall card number"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                     suppressHydrationWarning
                   />
@@ -294,6 +327,19 @@ export default function AuthModal() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Enter your email"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    suppressHydrationWarning
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Registration Number *
+                  </label>
+                  <input
+                    value={loginRegistrationNo}
+                    onChange={(e) => setLoginRegistrationNo(e.target.value)}
+                    placeholder="Enter registration number"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                     suppressHydrationWarning
                   />
