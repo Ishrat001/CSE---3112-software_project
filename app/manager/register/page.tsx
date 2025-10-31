@@ -18,7 +18,7 @@ export default function AuthModal() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [hallId, setHallId] = useState("");
-  const [userType] = useState("student");
+  const [userType] = useState("manager");
 
   // Login fields
   const [loginRegistrationNo, setLoginRegistrationNo] = useState("");
@@ -48,7 +48,7 @@ export default function AuthModal() {
 
   // ---- Login ----
   const handleLogin = async () => {
-    if (!email || !password || !loginRegistrationNo) {
+    if (!email || !password) {
       alert("❌ Please fill all login fields");
       return;
     }
@@ -61,11 +61,11 @@ export default function AuthModal() {
         .from("users")
         .select("*")
         .eq("email", email)
-        .eq("registration_no", loginRegistrationNo)
+        .eq("password",password)
         .single();
 
       if (userError || !userData) {
-        alert("❌ Invalid email or registration number");
+        alert("❌ Invalid email or password");
         setIsLoading(false);
         return;
       }
@@ -83,11 +83,9 @@ export default function AuthModal() {
 
       alert("✅ Login successful!");
       
-      if (userData.user_type === "student") {
-        router.push("/student/dashboard");
-      } else {
-        router.push("/manager/dashboard");
-      }
+       if (userData.user_type === "manager") {
+  router.push("/manager/dashboard");
+}
     } catch (error) {
       alert("❌ Login failed");
     } finally {
@@ -119,7 +117,8 @@ export default function AuthModal() {
       const { data: existingUser } = await supabase
         .from("users")
         .select("email")
-        .single();
+        .eq("email",email)
+        .maybeSingle();
 
       if (existingUser) {
         if (existingUser.email === email) {
@@ -145,12 +144,11 @@ export default function AuthModal() {
       // Step 2: Insert into users table
       const { error: insertError } = await supabase.from("users").insert([
         {
-          user_id: user.id,
           hall_id: Number(hallId),
-          user_type: userType,
-          name: name.trim(),
+          user_type: "manager",
+          name,
           email: email.toLowerCase(),
-          password: password, // Note: Hash in production
+         password, // Note: Hash in production
           phone: phone.trim() || null,
         },
       ]);
@@ -201,7 +199,7 @@ export default function AuthModal() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Enter your full name"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                     suppressHydrationWarning
                   />
                 </div>
@@ -236,7 +234,7 @@ export default function AuthModal() {
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="Enter phone number"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                     suppressHydrationWarning
                   />
                 </div>
@@ -250,7 +248,7 @@ export default function AuthModal() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Enter your email"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                     suppressHydrationWarning
                   />
                 </div>
@@ -264,7 +262,7 @@ export default function AuthModal() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Create password (min. 6 characters)"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                     suppressHydrationWarning
                   />
                 </div>
@@ -278,7 +276,7 @@ export default function AuthModal() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Confirm your password"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                     suppressHydrationWarning
                   />
                 </div>
@@ -294,7 +292,7 @@ export default function AuthModal() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Enter your email"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                     suppressHydrationWarning
                   />
                 </div>
@@ -308,7 +306,7 @@ export default function AuthModal() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                     suppressHydrationWarning
                   />
                 </div>

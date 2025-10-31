@@ -148,14 +148,13 @@ export default function AuthModal() {
       // Step 2: Insert into users table
       const { error: insertError } = await supabase.from("users").insert([
         {
-          user_id: user.id,
           hall_id: Number(hallId),
           user_type: userType,
           name: name.trim(),
           registration_no: registrationNo.trim(),
           hall_card_no: hallCardNo.trim(),
           email: email.toLowerCase(),
-          password: password, // Note: Hash in production
+          password, // Note: Hash in production
           phone: phone.trim() || null,
         },
       ]);
@@ -166,7 +165,8 @@ export default function AuthModal() {
       setIsRegister(false);
       resetForm();
     } catch (error) {
-      alert("❌ Registration failed: ");
+      alert("❌ Registration failed: "+error.message);
+      console.error(error);
     } finally {
       setIsLoading(false);
     }
@@ -208,7 +208,7 @@ export default function AuthModal() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Enter your full name"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    className="w-full px-3 py-2 border border-black-300 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                     suppressHydrationWarning
                   />
                 </div>
@@ -221,7 +221,7 @@ export default function AuthModal() {
                     value={registrationNo}
                     onChange={(e) => setRegistrationNo(e.target.value)}
                     placeholder="Enter registration number"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                     suppressHydrationWarning
                   />
                 </div>
@@ -269,7 +269,7 @@ export default function AuthModal() {
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="Enter phone number"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                     suppressHydrationWarning
                   />
                 </div>
@@ -283,7 +283,7 @@ export default function AuthModal() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Enter your email"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                     suppressHydrationWarning
                   />
                 </div>
@@ -297,7 +297,7 @@ export default function AuthModal() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Create password (min. 6 characters)"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                     suppressHydrationWarning
                   />
                 </div>
@@ -311,7 +311,7 @@ export default function AuthModal() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Confirm your password"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                     suppressHydrationWarning
                   />
                 </div>
@@ -327,7 +327,7 @@ export default function AuthModal() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Enter your email"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                     suppressHydrationWarning
                   />
                 </div>
@@ -340,7 +340,7 @@ export default function AuthModal() {
                     value={loginRegistrationNo}
                     onChange={(e) => setLoginRegistrationNo(e.target.value)}
                     placeholder="Enter registration number"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                     suppressHydrationWarning
                   />
                 </div>
@@ -354,7 +354,7 @@ export default function AuthModal() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                     suppressHydrationWarning
                   />
                 </div>
