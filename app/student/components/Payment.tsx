@@ -1,118 +1,192 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
-export default function Payment({ user }: any) {
+export default function PaymentPage({ user }: any) {
   const [month, setMonth] = useState("");
   const [bills, setBills] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [paymentProcessing, setPaymentProcessing] = useState(false);
+  const [processing, setProcessing] = useState(false);
+  const [hasFetched, setHasFetched] = useState(false);
+  const [processingId, setProcessingId] = useState<number | null>(null);
 
-  const fetchBills = async () => {
-    if (!month) return;
+  // ✅ Fetch unpaid bills for selected month
+  const fetchUnpaidBills = async () => {
+    if (!month) return alert("⚠️ Please select a month first!");
+    if (!user?.user_id) return alert("⚠️ User not logged in properly!");
 
     setLoading(true);
+
     const { data, error } = await supabase
       .from("bills")
       .select("*")
       .eq("user_id", user.user_id)
       .eq("bill_month", month)
-      .eq("status", "unpaid"); // only unpaid bills
+      .eq("status", "unpaid");
 
-    if (!error && data) setBills(data);
-    else setBills([]);
-    setLoading(false);
-  };
-
-  const total = bills.reduce((sum, b) => sum + Number(b.total_amount), 0);
-
-  const handlePay = async () => {
-    if (bills.length === 0) {
-      alert("❌ No unpaid bills to pay.");
-      return;
+    if (error) {
+      console.error("Error fetching bills:", error);
+      alert("❌ Failed to fetch bills!");
+      setBills([]);
+    } else {
+      setBills(data || []);
     }
 
+    setLoading(false);
+    setHasFetched(true);
+  };
+
+  // ✅ Pay a single bill
+  const handleSinglePayment = async (bill: any) => {
+    setProcessingId(bill.bill_id);
+
     try {
-      setPaymentProcessing(true);
+      const paymentDate = new Date().toISOString();
 
-      // Simulate online payment delay
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // 1. Update bill status
+      const { error: billError } = await supabase
+        .from("bills")
+        .update({ status: "paid" })
+        .eq("bill_id", bill.bill_id);
 
-      // Update each bill to paid
+      if (billError) throw billError;
+
+      // 2. Record payment
+      const { error: payError } = await supabase.from("payments").insert([
+        {
+          bill_id: bill.bill_id,
+          amount: bill.total_amount,
+          status: "success",
+          payment_date: paymentDate,
+        },
+      ]);
+
+      if (payError) throw payError;
+
+      setBills((prev) => prev.filter((b) => b.bill_id !== bill.bill_id));
+      alert(`✅ Payment successful for Bill ID: ${bill.bill_id}`);
+    } catch (err) {
+      console.error(err);
+      alert("❌ Payment failed. Please try again.");
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  // ✅ Pay all bills
+  const handleAllPayments = async () => {
+    if (bills.length === 0) return alert("❌ No unpaid bills to pay.");
+    setProcessing(true);
+
+    try {
+      const paymentDate = new Date().toISOString();
+      const totalAmount = bills.reduce((sum, bill) => sum + Number(bill.total_amount), 0);
+
       for (const bill of bills) {
-        await supabase
+        const { error: billError } = await supabase
           .from("bills")
           .update({ status: "paid" })
           .eq("bill_id", bill.bill_id);
+        if (billError) throw billError;
 
-        // Optional: record in payments table
-        await supabase.from("payments").insert([
+        const { error: payError } = await supabase.from("payments").insert([
           {
             bill_id: bill.bill_id,
             amount: bill.total_amount,
             status: "success",
+            payment_date: paymentDate,
           },
         ]);
+        if (payError) throw payError;
       }
 
-      alert(`✅ Payment successful! Total paid: ৳${total}`);
+      alert(`✅ Payment successful! Total Paid: ৳${totalAmount}`);
       setBills([]);
       setMonth("");
+      setHasFetched(false);
     } catch (err) {
       console.error(err);
-      alert("❌ Payment failed.");
+      alert("❌ Payment failed. Please try again.");
     } finally {
-      setPaymentProcessing(false);
+      setProcessing(false);
     }
   };
 
-  return (
-    <div className="text-black">
-      <h2 className="text-xl font-semibold mb-4 text-black">💳 Payment</h2>
+  const totalAmount = bills.reduce((sum, bill) => sum + Number(bill.total_amount), 0);
 
-      <div className="flex space-x-2 mb-4 text-black">
+  return (
+    <div className="bg-white p-10 rounded-xl shadow-lg text-black max-w-lg mx-auto min-h-[700px]">
+      <h2 className="text-3xl font-bold mb-8 flex items-center gap-2">💳 Payment</h2>
+
+      {/* Month Selector */}
+      <div className="flex gap-4 mb-8">
         <input
           type="month"
           value={month}
           onChange={(e) => setMonth(e.target.value)}
-          className="border p-2 rounded-md text-black"
+          className="border border-gray-300 rounded-md px-4 py-3 text-black flex-1 text-lg"
         />
         <button
-          onClick={fetchBills}
-          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+          onClick={fetchUnpaidBills}
+          disabled={loading}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md text-lg font-semibold disabled:opacity-50"
         >
-          View Unpaid Bills
+          {loading ? "Loading..." : "View Unpaid Bills"}
         </button>
       </div>
 
+      {/* Bill List */}
       {loading ? (
-        <p className="text-black">Loading bills...</p>
+        <p className="text-center text-lg">Fetching bills...</p>
+      ) : hasFetched && bills.length === 0 ? (
+        <div className="flex items-center justify-center gap-3 bg-red-100 text-red-700 rounded-lg p-6 text-3xl font-bold">
+          <span>❌</span> No unpaid bills found for this month.
+        </div>
       ) : bills.length > 0 ? (
-        <div className="bg-white p-4 rounded-md shadow text-black">
-          {bills.map((b) => (
-            <div key={b.bill_id} className="flex justify-between border-b py-2 text-black">
-              <span>{b.generated_at.split("T")[0]}</span>
-              <span>৳{b.total_amount}</span>
+        <div className="space-y-6">
+          {bills.map((bill) => (
+            <div
+              key={bill.bill_id}
+              className="flex justify-between items-center border p-8 rounded-xl shadow-md bg-green-50"
+            >
+              <div className="flex items-center gap-5">
+                <span className="text-4xl">📄</span>
+                <div>
+                  <p className="text-2xl font-semibold">
+                    {bill.generated_at.split("T")[0]}
+                  </p>
+                  <p className="text-lg text-gray-700">Bill ID: {bill.bill_id}</p>
+                </div>
+              </div>
+
+              <div className="text-right">
+                <p className="text-3xl font-bold mb-2">৳{bill.total_amount}</p>
+                <button
+                  onClick={() => handleSinglePayment(bill)}
+                  disabled={processingId === bill.bill_id}
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-lg font-semibold disabled:opacity-50"
+                >
+                  {processingId === bill.bill_id ? "Paying..." : "Pay Bill"}
+                </button>
+              </div>
             </div>
           ))}
 
-          <div className="flex justify-between mt-4 font-semibold text-black">
-            <span>Total to Pay</span>
-            <span>৳{total}</span>
+          <div className="flex justify-between mt-6 font-bold text-2xl p-6 border-t bg-gray-100 rounded-lg">
+            <span>Total Amount</span>
+            <span>৳{totalAmount}</span>
           </div>
 
           <button
-            onClick={handlePay}
-            disabled={paymentProcessing}
-            className="mt-4 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:opacity-50"
+            onClick={handleAllPayments}
+            disabled={processing}
+            className="w-full mt-6 bg-green-700 hover:bg-green-800 text-white py-5 rounded-xl text-2xl font-bold disabled:opacity-50"
           >
-            {paymentProcessing ? "Processing Payment..." : "Pay Now"}
+            {processing ? "Processing Payment..." : "Pay All Bills"}
           </button>
         </div>
-      ) : (
-        <p className="text-black">No unpaid bills found for this month.</p>
-      )}
+      ) : null}
     </div>
   );
 }
