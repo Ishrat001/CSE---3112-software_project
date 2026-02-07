@@ -100,6 +100,28 @@ export default function PaymentsPage() {
     }
   }, [month]);
   
+  // মাসের নাম থেকে নম্বরে কনভার্ট করার ফাংশন
+  const getMonthNumber = (monthName: string): string => {
+    const months: { [key: string]: string } = {
+      'january': '01', 'february': '02', 'march': '03', 'april': '04',
+      'may': '05', 'june': '06', 'july': '07', 'august': '08',
+      'september': '09', 'october': '10', 'november': '11', 'december': '12',
+      'jan': '01', 'feb': '02', 'mar': '03', 'apr': '04',
+      'ma': '05', 'jun': '06', 'jul': '07', 'aug': '08',
+      'sep': '09', 'oct': '10', 'nov': '11', 'dec': '12'
+    };
+    
+    const normalizedMonth = monthName?.toLowerCase() || '';
+    return months[normalizedMonth] || '01';
+  };
+  
+  // YYYYMM ফরম্যাটে bill_month তৈরি করার ফাংশন
+  const getFormattedBillMonth = (): string => {
+    if (!month) return '';
+    const monthNumber = getMonthNumber(month);
+    return `${currentYear}${monthNumber}`; // YYYYMM format (6 characters)
+  };
+  
   const fetchData = async () => {
     setLoading(true);
     
@@ -145,16 +167,21 @@ export default function PaymentsPage() {
       setStudentInfo(formattedStudentInfo);
       
       // Fetch monthly bill for the selected month and current year
+      const billMonth = getFormattedBillMonth();
+      console.log("Looking for bill with bill_month:", billMonth);
+      
       const { data: billData, error: billError } = await supabase
         .from('bills')
         .select('*')
         .eq('user_id', studentData.user_id)
-        .eq('bill_month', `${month}-${currentYear}`)
+        .eq('bill_month', billMonth)
         .maybeSingle();
       
       if (billError) {
         console.error('Error fetching bill:', billError);
       }
+      
+      console.log("Found bill data:", billData);
       
       if (billData) {
         setMonthlyBill(billData);
@@ -218,15 +245,20 @@ export default function PaymentsPage() {
         });
       }
       
-      // Create new bill in database
+      // Create new bill in database with YYYYMM format
+      const billMonth = getFormattedBillMonth();
+      console.log("Creating bill with bill_month:", billMonth);
+      
       const newBillData = {
         user_id: userId,
-        bill_month: `${month}-${currentYear}`,
+        bill_month: billMonth,
         total_amount: totalAmount,
         status: 'unpaid' as const,
         due_date: new Date(currentYear, monthIndex, 15).toISOString(),
         generated_at: new Date().toISOString()
       };
+      
+      console.log("Bill data to insert:", newBillData);
       
       const { data: newBill, error: insertError } = await supabase
         .from('bills')
@@ -236,8 +268,16 @@ export default function PaymentsPage() {
       
       if (insertError) {
         console.error('Error creating bill:', insertError);
+        console.error('Error details:', {
+          message: insertError.message,
+          details: insertError.details,
+          hint: insertError.hint,
+          code: insertError.code
+        });
         return;
       }
+      
+      console.log("Created new bill:", newBill);
       
       if (newBill) {
         setMonthlyBill(newBill);
@@ -248,9 +288,9 @@ export default function PaymentsPage() {
   };
 
   // Helper function to check if bill is paid
-const isBillPaid = (bill: MonthlyBill | null): boolean => {
-  return bill?.status === 'paid';
-};
+  const isBillPaid = (bill: MonthlyBill | null): boolean => {
+    return bill?.status === 'paid';
+  };
   
   const getMonthIndex = (monthName: string): number => {
     const months = [
@@ -343,7 +383,8 @@ const isBillPaid = (bill: MonthlyBill | null): boolean => {
       const { data: updatedBill, error: billError } = await supabase
         .from('bills')
         .update({
-          status: 'paid'
+          status: 'paid',
+          paid_at: new Date().toISOString()
         })
         .eq('bill_id', billId)
         .select()
@@ -357,6 +398,7 @@ const isBillPaid = (bill: MonthlyBill | null): boolean => {
       // Create payment record
       const paymentData = {
         bill_id: billId,
+        user_id: studentInfo?.user_id,
         amount: monthlyBill.total_amount + (monthlyBill.late_fee || 0),
         status: 'success' as const,
         method: selectedPaymentMethod,
@@ -532,20 +574,20 @@ const isBillPaid = (bill: MonthlyBill | null): boolean => {
                   {/* Student Info */}
                   <div className="grid grid-cols-2 gap-4 mb-4">
                     <div>
-                      <p className="text-sm text-gray-500">Student Name</p>
-                      <p className="font-semibold">{studentInfo?.name}</p>
+                      <p className="font-semibold text-gray-500">Student Name</p>
+                      <p className="text-black">{studentInfo?.name}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">Registration No</p>
-                      <p className="font-semibold">{studentInfo?.registration_no}</p>
+                      <p className="font-semibold text-gray-500">Registration No</p>
+                      <p className="text-black">{studentInfo?.registration_no}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">Hall</p>
-                      <p className="font-semibold">{studentInfo?.hall_name || 'N/A'}</p>
+                      <p className="font-semibold text-gray-500">Hall</p>
+                      <p className="text-black">{studentInfo?.hall_name || 'N/A'}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">Hall Card No</p>
-                      <p className="font-semibold">{studentInfo?.hall_card_no}</p>
+                      <p className="font-semibold text-gray-500">Hall Card No</p>
+                      <p className="text-black">{studentInfo?.hall_card_no}</p>
                     </div>
                   </div>
                   
@@ -554,7 +596,7 @@ const isBillPaid = (bill: MonthlyBill | null): boolean => {
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
                         <span className="text-gray-600">Base Amount</span>
-                        <span className="font-medium">₹{monthlyBill?.total_amount.toFixed(2)}</span>
+                        <span className="font-medium text-black">tk{monthlyBill?.total_amount.toFixed(2)}</span>
                       </div>
                       
                       {monthlyBill?.late_fee && monthlyBill.late_fee > 0 && (
@@ -568,9 +610,8 @@ const isBillPaid = (bill: MonthlyBill | null): boolean => {
                         <div className="flex justify-between items-center">
                           <span className="text-lg font-semibold text-gray-900">Total Amount</span>
                           <div className="flex items-center">
-                            <CurrencyRupeeIcon className="h-6 w-6 text-green-600 mr-1" />
-                            <span className="text-2xl font-bold text-green-700">
-                              ₹{(monthlyBill ? monthlyBill.total_amount + (monthlyBill.late_fee || 0) : 0).toFixed(2)}
+                            <span className="text-2xl font-bold text-indigo-700">
+                              tk{(monthlyBill ? monthlyBill.total_amount + (monthlyBill.late_fee || 0) : 0).toFixed(2)}
                             </span>
                           </div>
                         </div>
@@ -623,7 +664,7 @@ const isBillPaid = (bill: MonthlyBill | null): boolean => {
               {monthlyBill?.status === 'paid' && paymentDetails && (
                 <div className="bg-green-50 border border-green-200 rounded-xl p-6">
                   <div className="flex items-center">
-                    <CheckCircleIcon className="h-12 w-12 text-green-600 mr-4" />
+                    <CheckCircleIcon className="h-12 w-12 text-indigo-600 mr-4" />
                     <div>
                       <h3 className="text-xl font-bold text-green-800 mb-2">Bill Already Paid</h3>
                       <p className="text-green-700">
@@ -651,7 +692,7 @@ const isBillPaid = (bill: MonthlyBill | null): boolean => {
               {/* Payment Card */}
               <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
                 <div className="flex items-center mb-6">
-                  <LockClosedIcon className="h-6 w-6 text-green-600 mr-2" />
+                  <LockClosedIcon className="h-6 w-6 text-indigo-600 mr-2" />
                   <h3 className="text-xl font-bold text-gray-900">Secure Payment</h3>
                 </div>
                 
@@ -715,7 +756,7 @@ const isBillPaid = (bill: MonthlyBill | null): boolean => {
                             disabled={!selectedPaymentMethod || paymentProcessing}
                             className={`flex-1 py-2.5 rounded-lg font-semibold ${
                               selectedPaymentMethod && !paymentProcessing
-                                ? 'bg-green-600 hover:bg-green-700 text-white'
+                                ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
                                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                             }`}
                           >
@@ -729,15 +770,14 @@ const isBillPaid = (bill: MonthlyBill | null): boolean => {
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-gray-600">Amount to Pay</span>
                             <div className="flex items-center">
-                              <CurrencyRupeeIcon className="h-5 w-5 text-green-600 mr-1" />
                               <span className="text-2xl font-bold text-green-700">
-                                ₹{(monthlyBill ? monthlyBill.total_amount + (monthlyBill.late_fee || 0) : 0).toFixed(2)}
+                                tk{(monthlyBill ? monthlyBill.total_amount + (monthlyBill.late_fee || 0) : 0).toFixed(2)}
                               </span>
                             </div>
                           </div>
                           <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                             <div 
-                              className="h-full bg-green-500 rounded-full"
+                              className="h-full bg-indigo-500 rounded-full"
                               style={{ width: '100%' }}
                             ></div>
                           </div>
@@ -784,7 +824,7 @@ const isBillPaid = (bill: MonthlyBill | null): boolean => {
                 <ul className="space-y-2 text-sm text-blue-700">
                   <li className="flex items-start">
                     <ReceiptRefundIcon className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-                    <span>Payment issues? Contact hostel office: +880 XXXXXXXX</span>
+                    <span>Payment issues? Contact hostel office: +880 98231567</span>
                   </li>
                   <li className="flex items-start">
                     <BanknotesIcon className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
@@ -812,7 +852,7 @@ const isBillPaid = (bill: MonthlyBill | null): boolean => {
               Payment Instructions for {paymentMethods.find(m => m.id === selectedPaymentMethod)?.name}
             </h4>
             {selectedPaymentMethod === 'bkash' && (
-              <ol className="list-decimal list-inside space-y-2 text-yellow-700">
+              <ol className="list-decimal list-inside space-y-2 text-pink-700">
                 <li>Dial *247# from your bKash registered number</li>
                 <li>Choose &quot;Send Money&quot; option</li>
                 <li>Enter Merchant Number: <strong>017XXXXXXXX</strong></li>
@@ -822,7 +862,7 @@ const isBillPaid = (bill: MonthlyBill | null): boolean => {
               </ol>
             )}
             {selectedPaymentMethod === 'nagad' && (
-              <ol className="list-decimal list-inside space-y-2 text-yellow-700">
+              <ol className="list-decimal list-inside space-y-2 text-yellow-800">
                 <li>Dial *167# from your Nagad registered number</li>
                 <li>Choose &quot;Send Money&quot; option</li>
                 <li>Enter Merchant Number: <strong>017XXXXXXXX</strong></li>

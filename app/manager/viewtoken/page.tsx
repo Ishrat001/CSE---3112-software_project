@@ -38,7 +38,7 @@ export default function ManagerTokensPage() {
         .select("hall_id")
         .eq("email", data.user.email)
         .single();
-    
+
       if (!dbUser) {
         console.error("User not found");
         return;
@@ -84,39 +84,39 @@ export default function ManagerTokensPage() {
   /* ===================================================== */
 
   return (
-    <div className="p-10">
+    <div className="p-10 text-black bg-gray-50 min-h-screen">
 
-      <h1 className="text-3xl font-bold mb-6">Token List</h1>
+      <h1 className="text-3xl font-bold mb-6 text-black">Token List</h1>
 
       <button
         onClick={() => setShowModal(true)}
-        className="bg-indigo-600 text-white px-4 py-2 rounded mb-6"
+        className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl shadow"
       >
         Filter Tokens
       </button>
 
       {/* ================= MODAL ================= */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
 
           <motion.div
             initial={{ scale: 0.9 }}
             animate={{ scale: 1 }}
-            className="bg-white p-8 rounded-xl w-96"
+            className="bg-white p-8 rounded-2xl w-96 shadow-xl text-black"
           >
-            <h2 className="text-xl font-bold mb-4">Select Filters</h2>
+            <h2 className="text-xl font-bold mb-5 text-black">Select Filters</h2>
 
             <input
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="w-full border p-2 mb-3"
+              className="w-full border border-gray-300 rounded-lg p-2 mb-3 text-black"
             />
 
             <select
               value={selectedMeal}
               onChange={(e) => setSelectedMeal(e.target.value)}
-              className="w-full border p-2 mb-4"
+              className="w-full border border-gray-300 rounded-lg p-2 mb-4 text-black"
             >
               <option value="breakfast">Breakfast</option>
               <option value="lunch">Lunch</option>
@@ -125,7 +125,7 @@ export default function ManagerTokensPage() {
 
             <button
               onClick={fetchTokens}
-              className="w-full bg-indigo-600 text-white py-2 rounded"
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg shadow"
             >
               Proceed
             </button>
@@ -134,39 +134,43 @@ export default function ManagerTokensPage() {
       )}
 
       {/* ================= TABLE ================= */}
-      {loading && <p>Loading...</p>}
+      {loading && <p className="mt-6 text-black">Loading...</p>}
 
       {!loading && tokens.length > 0 && (
-        <div className="overflow-x-auto bg-white shadow rounded-xl">
-          <table className="w-full text-left">
+        <div className="overflow-x-auto bg-white shadow-lg rounded-2xl mt-6 text-black">
 
-            <thead className="bg-indigo-100">
+          <table className="w-full text-left text-black">
+
+            <thead className="bg-indigo-100 text-black">
               <tr>
-                <th className="p-3">Student</th>
-                <th className="p-3">Reg No</th>
-                <th className="p-3">Token</th>
-                <th className="p-3">Status</th>
-                <th className="p-3">Action</th>
+                <th className="p-4 font-semibold">Student</th>
+                <th className="p-4 font-semibold">Reg No</th>
+                <th className="p-4 font-semibold">Token</th>
+                <th className="p-4 font-semibold">Status</th>
+                <th className="p-4 font-semibold">Action</th>
               </tr>
             </thead>
 
             <tbody>
               {tokens.map((t) => (
-                <tr key={t.token_id} className="border-t">
+                <tr
+                  key={t.token_id}
+                  className="border-t hover:bg-gray-50 transition"
+                >
 
-                  <td className="p-3">{t.users?.name}</td>
-                  <td className="p-3">{t.users?.registration_no}</td>
-                  <td className="p-3 font-semibold">{t.token}</td>
+                  <td className="p-4 text-black">{t.users?.name}</td>
+                  <td className="p-4 text-black">{t.users?.registration_no}</td>
+                  <td className="p-4 font-semibold text-black">{t.token}</td>
 
-                  <td className="p-3">{t.status}</td>
+                  <td className="p-4 text-black capitalize">{t.status}</td>
 
-                  <td className="p-3">
+                  <td className="p-4">
                     <select
                       value={t.status}
                       onChange={(e) =>
                         updateStatus(t.token_id, e.target.value)
                       }
-                      className="border p-1 rounded"
+                      className="border border-gray-300 rounded-lg px-2 py-1 text-black"
                     >
                       <option value="pending">pending</option>
                       <option value="approved">approved</option>
@@ -182,7 +186,7 @@ export default function ManagerTokensPage() {
       )}
 
       {!loading && tokens.length === 0 && !showModal && (
-        <p>No tokens found for this selection.</p>
+        <p className="mt-6 text-black">No tokens found for this selection.</p>
       )}
     </div>
   );

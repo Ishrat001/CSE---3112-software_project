@@ -74,11 +74,10 @@ export default function ManagerMenuPage() {
     field: K,
     value: MenuRow[K]
   ) => {
-  const copy = [...rows];
+    const copy = [...rows];
     copy[index][field] = value;
     setRows(copy);
   };
-
 
   /* ---------------- SAVE MENU ---------------- */
   const saveMenu = async () => {
@@ -86,7 +85,6 @@ export default function ManagerMenuPage() {
 
     setLoading(true);
 
-    // delete old first (simple way)
     await supabase
       .from("menu")
       .delete()
@@ -94,7 +92,6 @@ export default function ManagerMenuPage() {
       .eq("meal_type", selectedMeal)
       .eq("menu_date", selectedDate);
 
-    // insert new
     const payload = rows.map((r) => ({
       ...r,
       hall_id: hallId,
@@ -111,37 +108,42 @@ export default function ManagerMenuPage() {
   /* ================================================== */
 
   return (
-    <div className="p-10">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-blue-100 p-10">
 
-      <h1 className="text-3xl font-bold mb-6">Set Menu</h1>
+      {/* ---------- HEADER ---------- */}
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold text-gray-800">Set Menu</h1>
 
-      <button
-        onClick={() => setShowModal(true)}
-        className="bg-indigo-600 text-white px-4 py-2 rounded mb-6"
-      >
-        Select Date & Meal
-      </button>
+        <button
+          onClick={() => setShowModal(true)}
+          className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl shadow-md transition"
+        >
+          Select Date & Meal
+        </button>
+      </div>
 
       {/* ================= MODAL ================= */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
 
           <motion.div
-            initial={{ scale: 0.9 }}
-            animate={{ scale: 1 }}
-            className="bg-white p-8 rounded-xl w-96"
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-2xl shadow-2xl p-8 w-96"
           >
-            <h2 className="text-xl font-bold mb-4">Choose Menu Slot</h2>
+            <h2 className="text-lg font-semibold text-gray-800 mb-5">
+              Choose Menu Slot
+            </h2>
 
             <input
               type="date"
-              className="w-full border p-2 mb-3"
+              className="w-full border rounded-lg p-2 mb-4 focus:ring-2 focus:ring-indigo-500 outline-none text-black"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
             />
 
             <select
-              className="w-full border p-2 mb-4"
+              className="w-full border rounded-lg p-2 mb-5 focus:ring-2 focus:ring-indigo-500 outline-none text-black"
               value={selectedMeal}
               onChange={(e) => setSelectedMeal(e.target.value)}
             >
@@ -152,7 +154,7 @@ export default function ManagerMenuPage() {
 
             <button
               onClick={loadMenu}
-              className="w-full bg-indigo-600 text-white py-2 rounded"
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg transition"
             >
               Proceed
             </button>
@@ -162,68 +164,72 @@ export default function ManagerMenuPage() {
 
       {/* ================= TABLE ================= */}
       {!showModal && !loading && (
-        <div className="bg-white rounded-xl shadow p-6">
+        <div className="bg-white rounded-2xl shadow-lg p-8">
 
-          <table className="w-full mb-4">
-            <thead>
-              <tr className="border-b">
-                <th>Item Name</th>
-                <th>Price</th>
-                <th>Available</th>
+          <table className="w-full mb-6 text-sm">
+
+            <thead className="bg-gray-100 text-gray-700">
+              <tr>
+                <th className="text-left px-4 py-3">Item Name</th>
+                <th className="text-left px-4 py-3">Price</th>
+                <th className="text-center px-4 py-3">Available</th>
               </tr>
             </thead>
 
             <tbody>
               {rows.map((row, i) => (
-                <tr key={i} className="border-b">
-
-                  <td>
+                <tr
+                  key={i}
+                  className="border-t hover:bg-gray-50 transition"
+                >
+                  <td className="px-4 py-3">
                     <input
                       value={row.item_name}
                       onChange={(e) =>
                         updateField(i, "item_name", e.target.value)
                       }
-                      className="border p-2 w-full"
+                      className="border rounded-lg p-2 w-full focus:ring-2 focus:ring-indigo-500 outline-none text-black"
                     />
                   </td>
 
-                  <td>
+                  <td className="px-4 py-3">
                     <input
                       type="number"
                       value={row.price}
                       onChange={(e) =>
                         updateField(i, "price", Number(e.target.value))
                       }
-                      className="border p-2 w-full"
+                      className="border rounded-lg p-2 w-full focus:ring-2 focus:ring-indigo-500 outline-none text-black"
                     />
                   </td>
 
-                  <td className="text-center">
+                  <td className="text-center px-4 py-3">
                     <input
                       type="checkbox"
                       checked={row.available}
                       onChange={(e) =>
                         updateField(i, "available", e.target.checked)
                       }
+                      className="h-5 w-5 accent-indigo-600 cursor-pointer"
                     />
                   </td>
-
                 </tr>
               ))}
             </tbody>
           </table>
 
-          <div className="flex gap-3">
+          {/* ACTION BUTTONS */}
+          <div className="flex gap-4">
             <button
               onClick={addRow}
-              className="bg-gray-500 text-white px-4 py-2 rounded"
+              className="bg-indigo-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg transition shadow"
             >
               + Add Item
             </button>
 
             <button
               onClick={saveMenu}
-              className="bg-green-600 text-white px-4 py-2 rounded"
+              className="bg-pink-700 hover:bg-pink-500 text-white px-5 py-2 rounded-lg transition shadow"
             >
               Save Menu
             </button>
@@ -231,7 +237,11 @@ export default function ManagerMenuPage() {
         </div>
       )}
 
-      {loading && <p>Loading...</p>}
+      {loading && (
+        <p className="mt-6 text-indigo-600 font-medium animate-pulse">
+          Loading menu...
+        </p>
+      )}
     </div>
   );
 }

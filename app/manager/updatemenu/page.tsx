@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
 type MenuItem = {
-  menu_id?: number; // existing হলে থাকবে
+  menu_id?: number;
   item_name: string;
   price: number;
   available: boolean;
@@ -95,7 +95,6 @@ export default function UpdateMenu() {
     setLoading(true);
 
     for (const item of items) {
-      // NEW → INSERT
       if (item.isNew) {
         await supabase.from("menu").insert({
           hall_id: hallId,
@@ -105,10 +104,7 @@ export default function UpdateMenu() {
           price: item.price,
           available: item.available,
         });
-      }
-
-      // EXISTING → UPDATE
-      else if (item.menu_id) {
+      } else if (item.menu_id) {
         await supabase
           .from("menu")
           .update({
@@ -127,29 +123,38 @@ export default function UpdateMenu() {
   /* ================================================== */
 
   return (
-    <div className="p-10">
-      <h1 className="text-3xl font-bold mb-6">Update Menu</h1>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-blue-100 p-10">
 
-      <button
-        onClick={() => setShowModal(true)}
-        className="bg-indigo-600 text-white px-4 py-2 rounded"
-      >
-        Select Date & Meal
-      </button>
+      {/* ---------- HEADER ---------- */}
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold text-gray-800">Update Menu</h1>
+
+        <button
+          onClick={() => setShowModal(true)}
+          className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl shadow-md transition"
+        >
+          Select Date & Meal
+        </button>
+      </div>
 
       {/* ================= MODAL ================= */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center">
-          <div className="bg-white p-8 rounded-xl w-96">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+
+          <div className="bg-white p-8 rounded-2xl shadow-2xl w-96">
+
+            <h2 className="text-lg font-semibold mb-5 text-gray-800">
+              Choose Menu Slot
+            </h2>
 
             <input
               type="date"
-              className="border p-2 w-full mb-3"
+              className="border rounded-lg p-2 w-full mb-4 focus:ring-2 focus:ring-indigo-500 outline-none text-black"
               onChange={(e) => setSelectedDate(e.target.value)}
             />
 
             <select
-              className="border p-2 w-full mb-4"
+              className="border rounded-lg p-2 w-full mb-5 focus:ring-2 focus:ring-indigo-500 outline-none text-black"
               onChange={(e) => setSelectedMeal(e.target.value)}
             >
               <option value="breakfast">Breakfast</option>
@@ -159,7 +164,7 @@ export default function UpdateMenu() {
 
             <button
               onClick={loadMenu}
-              className="bg-indigo-600 text-white w-full py-2 rounded"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white w-full py-2 rounded-lg transition"
             >
               Proceed
             </button>
@@ -169,57 +174,59 @@ export default function UpdateMenu() {
 
       {/* ================= TABLE ================= */}
       {!showModal && !loading && (
-        <div className="mt-6 bg-white p-6 rounded-xl shadow">
+        <div className="bg-white rounded-2xl shadow-lg p-8">
 
-          <table className="w-full">
-            <thead>
+          <table className="w-full text-sm">
+
+            <thead className="bg-gray-100 text-gray-700">
               <tr>
-                <th>Item</th>
-                <th>Price</th>
-                <th>Available</th>
-                <th>Delete</th>
+                <th className="px-4 py-3 text-left">Item</th>
+                <th className="px-4 py-3 text-left">Price</th>
+                <th className="px-4 py-3 text-center">Available</th>
+                <th className="px-4 py-3 text-center">Delete</th>
               </tr>
             </thead>
 
             <tbody>
               {items.map((item, i) => (
-                <tr key={i} className="border-b">
+                <tr key={i} className="border-t hover:bg-gray-50 transition">
 
-                  <td>
+                  <td className="px-4 py-3">
                     <input
                       value={item.item_name}
                       onChange={(e) =>
                         updateField(i, "item_name", e.target.value)
                       }
-                      className="border p-2"
+                      className="border rounded-lg p-2 w-full focus:ring-2 focus:ring-indigo-500 outline-none text-black"
                     />
                   </td>
 
-                  <td>
+                  <td className="px-4 py-3">
                     <input
                       type="number"
                       value={item.price}
                       onChange={(e) =>
                         updateField(i, "price", Number(e.target.value))
                       }
-                      className="border p-2"
+                      className="border rounded-lg p-2 w-full focus:ring-2 focus:ring-indigo-500 outline-none text-black"
                     />
                   </td>
 
-                  <td>
+                  <td className="text-center px-4 py-3">
                     <input
                       type="checkbox"
                       checked={item.available}
                       onChange={(e) =>
                         updateField(i, "available", e.target.checked)
                       }
+                      className="h-5 w-5 accent-indigo-600 cursor-pointer"
                     />
                   </td>
 
-                  <td>
+                  <td className="text-center px-4 py-3">
                     <button
                       onClick={() => deleteRow(i)}
-                      className="bg-red-500 text-white px-2 py-1 rounded"
+                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg transition"
                     >
                       Delete
                     </button>
@@ -230,17 +237,18 @@ export default function UpdateMenu() {
             </tbody>
           </table>
 
-          <div className="flex gap-3 mt-4">
+          {/* ACTION BUTTONS */}
+          <div className="flex gap-4 mt-6">
             <button
               onClick={addRow}
-              className="bg-gray-500 text-white px-4 py-2 rounded"
+              className="bg-indigo-700 hover:bg-blue-700 text-white px-5 py-2 rounded-lg shadow transition"
             >
               + Add Item
             </button>
 
             <button
               onClick={saveChanges}
-              className="bg-green-600 text-white px-4 py-2 rounded"
+              className="bg-pink-700 hover:bg-pink-500 text-white px-5 py-2 rounded-lg shadow transition"
             >
               Save Changes
             </button>
@@ -248,7 +256,11 @@ export default function UpdateMenu() {
         </div>
       )}
 
-      {loading && <p>Loading...</p>}
+      {loading && (
+        <p className="mt-6 text-indigo-600 font-medium animate-pulse">
+          Loading menu...
+        </p>
+      )}
     </div>
   );
 }

@@ -302,16 +302,16 @@ export default function MenuViewPage() {
                 <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
               </div>
               <div className="flex items-center">
-                <CurrencyRupeeIcon className="h-4 w-4 text-gray-500 mr-1" />
-                <span className="font-semibold">{item.price.toFixed(2)}</span>
+                <p className="text-sm text-black">(tk)</p>
+                <span className="font-semibold text-black">{item.price.toFixed(2)}</span>
               </div>
             </div>
           ))}
           <div className="flex justify-between items-center pt-4 border-t border-gray-200">
-            <span className="font-bold text-lg">Total:</span>
+            <span className="font-bold text-lg text-black">Total:</span>
             <div className="flex items-center">
-              <CurrencyRupeeIcon className="h-5 w-5 text-green-600 mr-1" />
-              <span className="text-xl font-bold text-green-700">{totalPrice.toFixed(2)}</span>
+              <p className="text-sm text-black">(tk)</p>
+              <span className="text-xl font-bold text-indigo-700">{totalPrice.toFixed(2)}</span>
             </div>
           </div>
         </div>
@@ -401,7 +401,7 @@ export default function MenuViewPage() {
                   whileHover={{ y: -5 }}
                   className={`bg-white rounded-xl shadow-lg border-2 p-6 cursor-pointer transition-all ${
                     selectedItems[item.menu_id] 
-                      ? 'border-green-500 bg-green-50' 
+                      ? 'border-indigo-500 bg-green-50' 
                       : 'border-gray-200 hover:border-blue-300'
                   }`}
                   onClick={() => handleItemSelect(item.menu_id, item.price)}
@@ -420,7 +420,7 @@ export default function MenuViewPage() {
                     </div>
                     <div className="flex items-center ml-4">
                       {selectedItems[item.menu_id] ? (
-                        <CheckCircleIcon className="h-6 w-6 text-green-500" />
+                        <CheckCircleIcon className="h-6 w-6 text-indigo-700" />
                       ) : (
                         <div className="w-6 h-6 border-2 border-gray-300 rounded-full"></div>
                       )}
@@ -429,8 +429,8 @@ export default function MenuViewPage() {
                   
                   <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
                     <div className="flex items-center">
-                      <CurrencyRupeeIcon className="h-5 w-5 text-green-600" />
-                      <span className="text-xl font-bold text-green-700 ml-1">
+                      <span className="text-xl font-bold text-indigo-700 ml-1">
+                        <p className="text-sm text-black">tk</p>
                         {item.price.toFixed(2)}
                       </span>
                     </div>
@@ -441,7 +441,7 @@ export default function MenuViewPage() {
                       }}
                       className={`px-4 py-2 rounded-lg font-medium ${
                         selectedItems[item.menu_id]
-                          ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                          ? 'bg-red-100 text-pink-700 hover:bg-red-200'
                           : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
                       }`}
                     >
@@ -472,10 +472,9 @@ export default function MenuViewPage() {
                   
                   <div className="flex items-center mb-4 md:mb-0">
                     <div className="text-right mr-6">
-                      <p className="text-sm text-gray-600">Total Amount</p>
+                      <p className="text-sm text-black">Total Amount(tk)</p>
                       <div className="flex items-center">
-                        <CurrencyRupeeIcon className="h-6 w-6 text-green-600" />
-                        <span className="text-2xl font-bold text-green-700 ml-1">
+                        <span className="text-2xl font-bold text-indigo-700 ml-1">
                           {totalPrice.toFixed(2)}
                         </span>
                       </div>
@@ -485,7 +484,7 @@ export default function MenuViewPage() {
                   <div className="flex space-x-3">
                     <button
                       onClick={() => router.back()}
-                      className="px-6 py-3 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+                      className="px-6 py-3 border border-indigo-700 text-indigo-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
                     >
                       Cancel
                     </button>
@@ -495,7 +494,7 @@ export default function MenuViewPage() {
                       className={`px-6 py-3 font-semibold rounded-lg transition-colors flex items-center justify-center min-w-[150px] ${
                         getSelectedCount() === 0 || isGenerating
                           ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                          : 'bg-green-600 hover:bg-green-700 text-white shadow-lg'
+                          : 'bg-indigo-700 hover:bg-blue-600 text-white shadow-lg'
                       }`}
                     >
                       {isGenerating ? (
