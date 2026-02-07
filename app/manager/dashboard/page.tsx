@@ -1,73 +1,177 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabaseClient";
-import Sidebar from "../components/Sidebar";
-import UpdateMenu from "../components/UpdateMenu";
-import ViewToken from "../components/ViewToken";
-import ViewPayment from "../components/ViewPayment";
-import GiveWarning from "../components/GiveWarning";
-import PreviousMeal from "../components/PreviousMeal";
-import StudentInfo from "../components/StudentInfo";
-
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import {
+  UserCircleIcon,
+  ClipboardDocumentListIcon,
+  PencilSquareIcon,
+  CalendarDaysIcon,
+  ReceiptPercentIcon
+} from "@heroicons/react/24/outline";
 
-export default function ManagerDashboard() {
-  const [selectedSection, setSelectedSection] = useState("updateMenu");
-  const [managerData, setManagerData] = useState<any>(null);
+import { supabase } from "@/lib/supabaseClient";
+import { User } from "@supabase/supabase-js";
+
+interface UserDetails {
+  user_id: number;
+  hall_id: number;
+  name: string;
+  email: string;
+  user_type: string;
+}
+
+interface HallDetails {
+  hall_id: number;
+  hall_name: string;
+}
+
+export default function ManagerDashboardPage() {
   const router = useRouter();
 
-  useEffect(() => {
-    const fetchManager = async () => {
-      const { data, error } = await supabase.auth.getUser();
-      if (error || !data.user) {
-        router.push("/manager/login");
-        return;
-      }
+  const [user, setUser] = useState<User | null>(null);
+  const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
+  const [hallDetails, setHallDetails] = useState<HallDetails | null>(null);
+  const [showAccount, setShowAccount] = useState(false);
 
-      const { data: profile } = await supabase
+  /* ---------------- FETCH USER ---------------- */
+  useEffect(() => {
+    const getUser = async () => {
+      const { data } = await supabase.auth.getUser();
+
+      if (!data.user) return router.push("/login");
+
+      setUser(data.user);
+
+      const { data: dbUser } = await supabase
         .from("users")
         .select("*")
         .eq("email", data.user.email)
-        .eq("user_type", "manager")
         .single();
 
-      setManagerData(profile);
+      // 🔥 role protection
+      if (dbUser.user_type !== "manager") {
+        router.push("/login");
+        return;
+      }
+
+      setUserDetails(dbUser);
+
+      const { data: hall } = await supabase
+        .from("halls")
+        .select("*")
+        .eq("hall_id", dbUser.hall_id)
+        .single();
+
+      setHallDetails(hall);
     };
 
-    fetchManager();
-  }, [router]);
+    getUser();
+  }, []);
 
-  const onLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      alert("❌ Logout failed: " + error.message);
-    } else {
-      alert("✅ Logged out successfully!");
-      router.push("/"); // redirect to login page
-    }
+  /* ---------------- LOGOUT ---------------- */
+  const logout = async () => {
+    await supabase.auth.signOut();
+    router.push("/login");
   };
 
+  /* ---------------- CARD NAVIGATION ---------------- */
+  const cards = [
+    {
+      title: "View Tokens",
+      desc: "See student meal tokens",
+      icon: ClipboardDocumentListIcon,
+      path: "/manager/viewtoken",
+    },
+    {
+      title: "Set Menu",
+      desc: "Add new menu items",
+      icon: PencilSquareIcon,
+      path: "/manager/setmenu",
+    },
+    {
+      title: "Update Menu",
+      desc: "Edit or delete menu",
+      icon: CalendarDaysIcon,
+      path: "/manager/updatemenu",
+    },
+    {
+      title: "View Bills",
+      desc: "Check hall bills",
+      icon: ReceiptPercentIcon,
+      path: "/manager/bills",
+    },
+  ];
+
   return (
-    <div className="flex w-full min-h-screen">
-      <Sidebar
-        selected={selectedSection}
-        onSelect={setSelectedSection}
-        role="manager"
-        onLogout={onLogout}
-      />
-      <main className="flex-1 p-8 bg-gray-50">
-        <h1 className="text-2xl text-black font-semibold mb-4">
-          Welcome, {managerData?.name || "Manager"}
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-100">
+
+      {/* ---------- HEADER ---------- */}
+      <header className="flex justify-between items-center px-8 py-4 bg-white shadow">
+
+        <h1 className="text-2xl font-bold text-indigo-600">
+          Manager Dashboard
         </h1>
 
-        {selectedSection === "updateMenu" && <UpdateMenu manager={managerData} />}
-        {selectedSection === "viewToken" && <ViewToken manager={managerData} />}
-        {selectedSection === "viewPayment" && <ViewPayment manager={managerData} />}
-        {selectedSection === "giveWarning" && <GiveWarning manager={managerData} />}
-        {selectedSection === "previousMeals" && <PreviousMeal manager={managerData} />}
-        {selectedSection === "studentInfo" && <StudentInfo manager={managerData} />}
-      </main>
+        <button
+          onClick={() => setShowAccount(!showAccount)}
+          className="flex items-center gap-2"
+        >
+          <UserCircleIcon className="h-9 w-9" />
+          Account
+        </button>
+      </header>
+
+      {/* ---------- ACCOUNT MODAL ---------- */}
+      {showAccount && userDetails && (
+        <div className="absolute top-16 right-8 bg-white shadow-xl rounded-xl p-5 w-72">
+
+          <p className="font-bold mb-2">Manager Info</p>
+
+          <p><b>Name:</b> {userDetails.name}</p>
+          <p><b>Email:</b> {user?.email}</p>
+          <p><b>Hall:</b> {hallDetails?.hall_name}</p>
+
+          <button
+            onClick={logout}
+            className="mt-4 w-full bg-indigo-600 text-white py-2 rounded"
+          >
+            Logout
+          </button>
+        </div>
+      )}
+
+      {/* ---------- HERO ---------- */}
+      <section className="text-center py-12">
+        <h2 className="text-3xl font-bold mb-2">
+          Welcome, {userDetails?.name}
+        </h2>
+        <p className="text-gray-600">
+          Manage hall meals, tokens and bills easily
+        </p>
+      </section>
+
+      {/* ---------- CARDS ---------- */}
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-8 px-10 pb-12">
+
+        {cards.map((card, i) => (
+          <motion.div
+            key={i}
+            whileHover={{ scale: 1.04 }}
+            onClick={() => router.push(card.path)}
+            className="cursor-pointer bg-white p-8 rounded-2xl shadow-lg flex items-center gap-5"
+          >
+            <card.icon className="h-14 w-14 text-indigo-600" />
+
+            <div>
+              <h3 className="text-xl font-bold">{card.title}</h3>
+              <p className="text-gray-500">{card.desc}</p>
+            </div>
+          </motion.div>
+        ))}
+
+      </section>
     </div>
   );
 }
